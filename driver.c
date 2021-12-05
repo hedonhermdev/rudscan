@@ -29,6 +29,7 @@ int main(int argc, char** argv) {
             for (int p = 0; p < h.ports.size; p++) {
                 printf("active: %d\n", h.ports.list[p]);
             }
+            printf("udp scan done.\n");
         }
     }
 
