@@ -65,7 +65,6 @@ int checkhost(int sockfd, char* sendbuf, char* recvbuf, struct sockaddr* host) {
 
     
     // skipping the first 20 bytes because that is the IP header
-    resp = (struct icmp*)(&recvbuf[20]);
 
     return resp->icmp_type;
 }
@@ -94,6 +93,8 @@ int mark_active_hosts(Hosts* hosts) {
 
     }
 
+    struct icmp* resp;
+
     for (int i = 0; i < hosts->size; i++) {
         Host* h = &hosts->list[i];
 
@@ -107,7 +108,10 @@ int mark_active_hosts(Hosts* hosts) {
             continue;
         }
 
-        int icmp_type = checkhost(sockfd, sendbuf, recvbuf, h->addr);
+        resp = (struct icmp*)(&recvbuf[20]);
+
+        int icmp_type = resp->icmp_type;
+
         h->online = icmp_type == 0 ? true : false;
     }
 
