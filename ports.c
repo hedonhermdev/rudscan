@@ -202,7 +202,7 @@ int udp_scan(Host *h) {
             bytes_sent = sendto(sockfd, senddata, 5, 0, (struct sockaddr *)&servaddr, sizeof(servaddr));
             if (bytes_sent < 0)
             {
-                perror("");
+                perror("sendto");
             }
         }
         close(sockfd);
