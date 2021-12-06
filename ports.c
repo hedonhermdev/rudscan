@@ -53,16 +53,14 @@ int tcp_scan(Host *h)
     return 0;
 }
 
-void wait_rtt(struct sockaddr_in servaddr, int num_rtt)
-{
+void wait_rtt(struct sockaddr_in servaddr, int num_rtt) {
     fd_set fdset;
 
     struct timeval tv;
     tv.tv_sec = TIMEOUT;
     tv.tv_usec = 0;
 
-    int ret, so_error;
-    unsigned int len = sizeof(so_error);
+    int ret, so_error, len = sizeof(so_error);
     for (int i = 0; i < num_rtt; i++)
     {
         servaddr.sin_port = htons(INACTIVE_PORT);
@@ -79,6 +77,7 @@ void wait_rtt(struct sockaddr_in servaddr, int num_rtt)
         }
         if (ret == 0)
         {
+            close(sockfd);
             continue;
         }
         select(sockfd + 1, NULL, &fdset, NULL, &tv);
@@ -90,7 +89,7 @@ void readICMP(int rawfd, Host* h, struct sockaddr_in servaddr, int port_start, i
 {
 
     int hlen1, hlen2, icmplen, ret;
-    unsigned int len;
+    int len;
     int n;
     struct ip *ip, *hip;
     struct icmp *icmp;
@@ -110,7 +109,7 @@ void readICMP(int rawfd, Host* h, struct sockaddr_in servaddr, int port_start, i
     len = sizeof(recvsa);
     //wait for 2 RTT using TCP connect. This ensures that we have recieved all ICMP messages sent by the remote host
     wait_rtt(servaddr, 2);
-    while ((n = recvfrom(rawfd, recvbuf, DGRAM_SIZE, MSG_DONTWAIT, (struct sockaddr *)&recvsa, &len)) > 0)
+    while ((n = recvfrom(rawfd, recvbuf, DGRAM_SIZE, MSG_DONTWAIT, (struct sockaddr *)&recvsa, (socklen_t*)&len)) > 0)
     {
         ip = (struct ip *)recvbuf;
         hlen1 = ip->ip_hl << 2;
@@ -125,7 +124,6 @@ void readICMP(int rawfd, Host* h, struct sockaddr_in servaddr, int port_start, i
             continue;
         }
 
-        sleep(1);
         if (icmp->icmp_type == ICMP_UNREACH && icmp->icmp_code == ICMP_UNREACH_PORT)
         {
             if (icmplen < 8 + sizeof(struct ip))
@@ -146,7 +144,7 @@ void readICMP(int rawfd, Host* h, struct sockaddr_in servaddr, int port_start, i
     {
         if (inactive_ports[i] == -1)
         {
-            push_port(&h->ports, port_start+i);
+            push_port(&h->ports, port_start + i);
         }
     }
 }
@@ -164,6 +162,7 @@ int udp_scan(Host *h) {
     char *senddata = "101010";
 
     int rawfd = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
+    int sockfd = socket(AF_INET, SOCK_DGRAM, 0);
     setuid(getuid());
 
     for (int port = 1; port < PORT_MAX; port++)
@@ -173,7 +172,7 @@ int udp_scan(Host *h) {
             readICMP(rawfd, h, servaddr, port - BATCHSIZE_UDP_PORT, port - 1);
         }
         servaddr.sin_port = htons(port);
-        int sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+
         int bytes_sent;
         for (int try = 0; try < TRIES; try++)
         {
@@ -183,9 +182,9 @@ int udp_scan(Host *h) {
                 perror("sendto");
             }
         }
-        close(sockfd);
     }
 
+    close(sockfd);
     close(rawfd);
 
     return 0;
