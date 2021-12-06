@@ -33,10 +33,10 @@ int main(int argc, char** argv) {
         
         if (h.online) {
             printf("host is online. performing tcp scan...\n");
-            /* tcp_scan(&hosts.list[i]); */
-            /* for (int p = 0; p < h.ports.size; p++) { */
-            /*     printf("active: %d\n", h.ports.list[p]); */
-            /* } */
+            tcp_scan(&hosts.list[i]);
+            for (int p = 0; p < h.ports.size; p++) {
+                printf("active: %d\n", h.ports.list[p]);
+            }
             printf("tcp scan done. performing udp scan ...\n");
             udp_scan(&hosts.list[i]);
             for (int p = 0; p < h.ports.size; p++) {

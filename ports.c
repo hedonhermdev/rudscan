@@ -36,7 +36,7 @@ int tcp_scan(Host *h)
         }
         if (ret == 0)
         {
-            printf("active: %d\n", port); 
+            printf("tcp: %d\n", port);
             push_port(&h->ports, port);
         }
         else if (select(sockfd + 1, NULL, &fdset, NULL, &tv) == 1)
@@ -44,7 +44,7 @@ int tcp_scan(Host *h)
             getsockopt(sockfd, SOL_SOCKET, SO_ERROR, &so_error, &len);
             if (so_error == 0)
             {
-                printf("active: %d\n", port); 
+                printf("tcp: %d\n", port);
                 push_port(&h->ports, port);
             }
         }
@@ -144,6 +144,7 @@ void readICMP(int rawfd, Host* h, struct sockaddr_in servaddr, int port_start, i
     {
         if (inactive_ports[i] == -1)
         {
+            printf("udp: %d\n", port_start+i);
             push_port(&h->ports, port_start + i);
         }
     }
