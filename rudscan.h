@@ -1,19 +1,31 @@
 // ----- (begin) library includes -----
 #include <arpa/inet.h>
+#include <errno.h>
+#include <fcntl.h>
 #include <netdb.h>
 #include <netinet/in.h>
-#include <netinet/ip.h>
 #include <netinet/ip_icmp.h>
+#include <netinet/udp.h>
+#include <pwd.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/errno.h>
 #include <sys/socket.h>
-#include <sys/socket.h>
 #include <sys/types.h>
+#include <sys/un.h>
 #include <unistd.h>
 // ----- (end) library includes -----
+
+// ----- (begin) constants -----
+#define PORT_MAX 65535
+#define TIMEOUT 1
+#define DGRAM_SIZE 65535
+#define TRIES 3
+#define BATCHSIZE_UDP_PORT 32
+#define INACTIVE_PORT 65535
+// ----- (end) constants -----
 
 // ----- (begin) Hosts -----
 typedef struct Ports {

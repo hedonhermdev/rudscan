@@ -1,26 +1,4 @@
-#include <unistd.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <sys/socket.h>
-#include <arpa/inet.h>
-#include <netdb.h>
-#include <string.h>
-#include <sys/un.h>
-#include <errno.h>
-#include <fcntl.h>
-#include <pwd.h>
-#include <netinet/ip.h>
-#include <netinet/ip_icmp.h>
-#include <netinet/udp.h>
-
 #include "rudscan.h"
-
-#define PORT_MAX 65535
-#define TIMEOUT 1
-#define DGRAM_SIZE 65535
-#define TRIES 3
-#define BATCHSIZE_UDP_PORT 32
-#define INACTIVE_PORT 65535
 
 int tcp_scan(Host *h)
 {
@@ -207,6 +185,8 @@ int udp_scan(Host *h) {
         }
         close(sockfd);
     }
+
+    close(rawfd);
 
     return 0;
 }
