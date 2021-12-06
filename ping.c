@@ -60,22 +60,9 @@ int checkhost(int sockfd, char* sendbuf, char* recvbuf, struct sockaddr* host) {
 
     makeicmppacket((struct icmp*)sendbuf);
 
-    socklen_t addrlen = (socklen_t) sizeof(host);
        
-    if ((rv = sendto(sockfd, sendbuf, 64, 0, host, addrlen)) < 0) {
-        perror("sendto");
-        return -1;
-    }
 
 
-    if ((rv = recvfrom(sockfd, recvbuf, 1024, 0, host, &addrlen)) < 0) {
-        if (errno == EAGAIN) {
-            fprintf(stderr, "host unavailable due to timeout\n");
-            return -1;
-        }
-        perror("recvfrom");
-        return -1;
-    }
     
     // skipping the first 20 bytes because that is the IP header
     resp = (struct icmp*)(&recvbuf[20]);
@@ -84,17 +71,42 @@ int checkhost(int sockfd, char* sendbuf, char* recvbuf, struct sockaddr* host) {
 }
 
 int mark_active_hosts(Hosts* hosts) {
-    int sockfd = getrawsocket();
+    int rv;
+    char sendbuf[1024];
+    char recvbuf[1024];
+    int sockfd;
 
-    if (sockfd < 0) {
+    if ((sockfd = getrawsocket()) < 0) {
         return -1;
     }
 
-    char sendbuf[1024];
-    char recvbuf[1024];
+    makeicmppacket((struct icmp*) sendbuf);
 
     for (int i = 0; i < hosts->size; i++) {
         Host* h = &hosts->list[i];
+
+        socklen_t addrlen = (socklen_t) sizeof(h->addr);
+
+        if ((rv = sendto(sockfd, sendbuf, 64, 0, h->addr, addrlen)) < 0) {
+            perror("sendto");
+            continue;
+        }
+
+    }
+
+    for (int i = 0; i < hosts->size; i++) {
+        Host* h = &hosts->list[i];
+
+        socklen_t addrlen = (socklen_t) sizeof(h->addr);
+
+        if ((rv = recvfrom(sockfd, recvbuf, 1024, 0, h->addr, &addrlen)) < 0) {
+            if (errno == EAGAIN) {
+                continue;
+            }
+            perror("recvfrom");
+            continue;
+        }
+
         int icmp_type = checkhost(sockfd, sendbuf, recvbuf, h->addr);
         h->online = icmp_type == 0 ? true : false;
     }

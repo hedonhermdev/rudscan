@@ -1,19 +1,28 @@
 #include "rudscan.h"
 
 int main(int argc, char** argv) {
-
     if (argc < 2) {
         printf("usage: %s <cidr>\n", argv[0]);
         exit(1);
     }
 
+    int rv;
     char addr_buf[INET_ADDRSTRLEN];
 
     Hosts hosts = new_hosts(32);
 
-    hosts_from_cidr(argv[1], &hosts); 
+    if (hosts_from_cidr(argv[1], &hosts) == NULL) {
+        fprintf(stderr, "unrecoverable error occured\n");
+        exit(1);
+    }
 
-    mark_active_hosts(&hosts);
+    rv = mark_active_hosts(&hosts);
+
+    if (rv == -1) {
+        fprintf(stderr, "unrecoverable error occured\n");
+        exit(1);
+    }
+
     printf("ping scan complete. performing port scan...\n");
     
     for (int i = 0; i < hosts.size; i++) {
